@@ -1,101 +1,174 @@
 <div align="center">
 
-# ☁️ PFSwChO - Laboratorium 3
+# ☁️ PFSwChO - Laboratorium 4
 Zadanie *nieobowiązkowe* do wykonania w celu laboratorium. ☁️
 
 </div>
 
-## Krok 1: Utworzenie przestrzeni nazw
+### Krok 1: Utworzenie przestrzeni nazw
 
+##### Polecenie:
 ```bash
-kubectl create namespace lab3
+kubectl create ns lab4
 ```
 
-Zrzut ekranowy:
-![0](https://github.com/Zeusek/PFSwChO/assets/33155636/b737aff7-1f6d-4202-a3ec-88adbcf5f7bd)
+##### Zrzut ekranowy:
+<div align="center">
 
-## Krok 2: Utworzenie pliku YAML dla pod-a w wersji podstawowej
+![0](https://github.com/Zeusek/PFSwChO/assets/33155636/78064ca1-a7bc-4637-918e-aaaee6d2f9ff)
 
-Polecenie:
+</div>
+
+### Krok 2: Utworzenie quota(y?) z ograniczeniami na przestrzeń nazw
+
+##### Polecenie:
 ```bash
-kubectl run sidecar-pod --namespace=lab3 --dry-run=client -o yaml --image=busybox -- /bin/sh -c "while true; do date >> /var/log/date.log; sleep 5; done" > sidecar-pod.yaml
+kubectl create quota lab4quota --hard=cpu=1,memory=1G,pods=5 --namespace=lab4
 ```
 
-Zrzut ekranowy:
-![1](https://github.com/Zeusek/PFSwChO/assets/33155636/7fd60ac9-3ac0-4999-a553-eb46f43e2972)
+##### Zrzut ekranowy:
 
-## Krok 3: Modyfikacja pliku YAML dla pod-a w wersji finalnej
+<div align="center">
 
-Plik yaml:
+![1](https://github.com/Zeusek/PFSwChO/assets/33155636/e1fd5ceb-12b8-42a5-81d2-a17e984b8e20)
+![2](https://github.com/Zeusek/PFSwChO/assets/33155636/02a57d6c-1e34-4034-bc6c-711a969ffaa1)
+
+</div>
+
+
+### Krok 3: Utworzenie deploymentu
+
+Utworzenie deploymentu dla przestrzeni nazw ograniczonego quotą i trzema replikami.
+
+Polecenie przekazane "na sucho" do pliku ``.yaml``, by móc określić zasoby w następnym kroku.
+
+##### Polecenie:
+```bash
+kubectl create deploy restrictednginx --image=nginx -n lab4 --replicas=3 --dry-run=client -o yaml > rngix.yaml
+```
+
+##### Plik .yaml:
 ```yaml
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: sidecar-pod
-  namespace: lab3
+  creationTimestamp: null
+  labels:
+    app: restrictednginx
+  name: restrictednginx
+  namespace: lab4
 spec:
-  containers:
-	- name: busybox-container
-  	image: busybox
-  	command:
-    	- "/bin/sh"
-    	- "-c"
-    	- "while true; do date >> /var/log/date.log; sleep 5; done"
-  	volumeMounts:
-    	- name: shared-volume
-      	mountPath: /var/log
-	- name: nginx-container
-  	image: nginx
-  	ports:
-    	- containerPort: 80
-  	volumeMounts:
-    	- name: shared-volume
-      	mountPath: /usr/share/nginx/html
-  volumes:
-	- name: shared-volume
-  	hostPath:
-    	path: /var/log
-  restartPolicy: Never
+  replicas: 3
+  selector:
+    matchLabels:
+      app: restrictednginx
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: restrictednginx
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        resources: {}
+status: {}
 ```
 
-Zrzut ekranowy:
-![2](https://github.com/Zeusek/PFSwChO/assets/33155636/aeb12668-e316-4f6a-882e-f90799e78e22)
+##### Zrzut ekranowy:
+
+<div align="center">
+
+![3](https://github.com/Zeusek/PFSwChO/assets/33155636/c794425b-d53b-4bbd-8f93-401a8d088e09)
+
+</div>
+
+### Krok 4: Ustawienie minimalnych i maksymalnych zasobów
+
+Dzięki argumentom ``--local --dry-run=client -o yaml >`` możliwe jest przekazanie ustawionych wymagań z wcześniej utworzonego pliku.
+
+Niestety w momencie, gdy próbujemy nadpisac wcześniej utworzony plik ``rngix.yaml`` używając ``>`` to plik zostaje wyczyszczony, jedynym(?) lekarstwem tej przypadłości jest przypisanie zmodyfikowanej konfiguracji do nowego pliku ``.yaml``.
+
+##### Polecenie:
+```bash
+kubectl set resources -f rngix.yaml --requests=cpu=125m,memory=64Mi --limits=cpu=250m,memory=256Mi --local --dry-run=client -o yaml > rngix_resoursed.yaml
+```
+
+##### Plik .yaml:
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: restrictednginx
+  name: restrictednginx
+  namespace: lab4
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: restrictednginx
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: restrictednginx
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        resources:
+          limits:
+            cpu: 250m
+            memory: 256Mi
+          requests:
+            cpu: 125m
+            memory: 64Mi
+status: {}
+```
 
 
-### Krok 4: Utworzenie pod-a
+##### Zrzut ekranowy:
+
+<div align="center">
+
+![4](https://github.com/Zeusek/PFSwChO/assets/33155636/87fd2ad6-c4c4-485f-bd22-f18ca5b71c7a)
+
+</div>
+
+
+### Krok 5: Uruchomienie deploymentu z wymaganiami
 
 Polecenie:
 ```bash
-kubectl create -f sidecar-pod.yaml
+kubectl apply -f rngix_resoursed.yaml
 ```
 
 Zrzut ekranowy:
-![3](https://github.com/Zeusek/PFSwChO/assets/33155636/15fe6d61-9187-42fa-92f6-900fa2a5bc9d)
 
-### Krok 5: Ustawienie port-forwarding
+<div align="center">
+
+![5](https://github.com/Zeusek/PFSwChO/assets/33155636/cfeb350f-6f27-4e1d-a548-77bc2a2937f6)
+
+</div>
+
+### Krok 6: Sprawdzenie obciążenia quoty
 
 Polecenie:
 ```bash
-kubectl port-forward -n lab3 sidecar-pod 8080:80
+kubectl get quota -n lab4
 ```
 
 Zrzut ekranowy:
-![4](https://github.com/Zeusek/PFSwChO/assets/33155636/799cee34-7975-40bf-b014-2d8515d78ea3)
 
-### Krok 6: Wykonanie żądania za pomocą programu curl
+<div align="center">
 
-Polecenie:
-```bash
-curl http://localhost:8080/date.log
-```
+![6](https://github.com/Zeusek/PFSwChO/assets/33155636/02b8b7f1-632d-4e5e-8fff-6068fb4746af)
 
-Zrzut ekranowy:
-![5](https://github.com/Zeusek/PFSwChO/assets/33155636/1db3f8cf-027f-48d1-bd0b-7815dccf6fa1)
-
-#### Weryfikacja
-
-Zrzut ekranowy:
-![6](https://github.com/Zeusek/PFSwChO/assets/33155636/dabd8798-e8e9-462c-9c6d-83d28dcfcf06)
+</div>
 
 ---
 <div align="right"
