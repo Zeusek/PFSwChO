@@ -279,6 +279,7 @@ kubectl autoscale deployment php-apache --namespace=lab5 --cpu-percent=50 --max=
 >
 > 
 > \* - Przy bezpiecznym założeniu +1 ilości repliki.
+> 
 > \** - Najlepszym sposobem by określić maksymalną ilość replik jest sprawdzenie przepływu zapytań na serwer.
 
 ### Krok 5: Skrypt tworzący obiekty z `.yaml`
