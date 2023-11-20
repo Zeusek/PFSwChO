@@ -1,7 +1,7 @@
 <div align="center">
 
 # ☁️ PFSwChO - Laboratorium 5
-Zadanie *nieobowiązkowe* do wykonania w celu laboratorium. ☁️
+Zadanie *obowiązkowe* do wykonania w celu laboratorium. ☁️
 
 </div>
 
@@ -14,6 +14,12 @@ kubectl create ns lab5
 
 ##### Zrzut ekranowy:
 <div align="center">
+
+<div align="right">
+
+  ###### Utworzenie przestrzeni nazw
+  
+</div>
 
 ![0](https://github.com/Zeusek/PFSwChO/assets/33155636/707ec43a-e040-4acb-b94d-b2c167da37b5)
 
@@ -31,13 +37,16 @@ kubectl create ns lab5
 ```bash
 kubectl create quota lab5quota --namespace=lab5 --hard=cpu=2000m,pods=10,memory=1.5Gi --dry-run=client -o yaml > lab5quota.yaml
 ```
-```bash
-kubectl apply -f lab5quota.yaml
-```
 
 ##### Zrzut ekranowy:
 
 <div align="center">
+
+<div align="right">
+
+  ###### Utworzenie pliku .yaml quota dla przestrzeni nazw
+  
+</div>
 
 ![1](https://github.com/Zeusek/PFSwChO/assets/33155636/abeeb289-5f93-4308-bdbd-91858c8c7153)
 
@@ -66,9 +75,6 @@ Bazując na wcześniejszym pliku `worker.yaml`, utworzony jest kolejny plik z do
 
 ```bash
 kubectl set resources -f worker.yaml --requests=cpu=100m,memory=100Mi --limits=cpu=200m,memory=200Mi --local --dry-run=client -o yaml > worker_resoursed.yaml
-```
-```bash
-kubectl apply -f worker_resoursed.yaml
 ```
 
 ##### Plik `worker_resoursed.yaml`:
@@ -101,13 +107,19 @@ status: {}
 
 <div align="center">
 
+<div align="right">
+
+  ###### Utworzenie pliku .yaml dla poda `worker` z zasobami
+  
+</div>
+
 ![2](https://github.com/Zeusek/PFSwChO/assets/33155636/1dcc0dbd-3080-45ce-acf5-3d37f99edfc4)
 
 </div>
 
 ### Krok 3: Modifykacja plików z dokumentacji
 
-Ciekawym efektem wykonanego poniżej polecenia jest fakt, że plik `.yaml` posiada dodatkowy wewnetrzny zapis w formacie `.json`.
+❄️ Ciekawym efektem wykonanego poniżej polecenia jest fakt, że plik `.yaml` posiada dodatkowy wewnetrzny zapis w formacie `.json`.
 
 
 ##### Polecenie:
@@ -126,7 +138,7 @@ items:
       kubectl.kubernetes.io/last-applied-configuration: |
         {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"name":"php-apache","namespace":"default"},"spec":{"selector":{"matchLabels":{"run":"php-apache"}},"template":{"metadata":{"labels":{"run":"php-apache"}},"spec":{"containers":[{"image":"registry.k8s.io/hpa-example","name":"php-apache","ports":[{"containerPort":80}],"resources":{"limits":{"cpu":"500m"},"requests":{"cpu":"200m"}}}]}}}}
     name: php-apache
-    namespace: default
+    namespace: lab5
   spec:
     selector:
       matchLabels:
@@ -157,7 +169,7 @@ items:
     labels:
       run: php-apache
     name: php-apache
-    namespace: default
+    namespace: lab5
   spec:
     ports:
     - port: 80
@@ -166,11 +178,8 @@ items:
 kind: List
 metadata: {}
 ```
-##### Polecenie:
-```bash
-kubectl apply -f php-apache.yaml
-```
 
+❄️ Niestety, ale ustawienie zasobów za pomocą `kubectl set resources...` nie było możliwe, ponieważ polecenie ustawiało zasoby jedynie dla typu `Deployment`, a usuwało linie związane z typem `Service`. 
 Zadanie wspomina o przestrzeni nazw określonej jako `zad4` lecz człowiek to nie robot, pomylić się może. Zostało domyślnie przyjęte iż chodzi o `zad5` (w tym przypadku, student również to nie robot i został przyjęty zapis `lab` zamiast `zad`).
 
 ##### Zrzut ekranowy:
@@ -183,7 +192,7 @@ Zadanie wspomina o przestrzeni nazw określonej jako `zad4` lecz człowiek to ni
 
 </div>
 
-![image](https://github.com/Zeusek/PFSwChO/assets/33155636/c3a44444-ff36-4a97-9928-ead86793cca1)
+![3](https://github.com/Zeusek/PFSwChO/assets/33155636/c3a44444-ff36-4a97-9928-ead86793cca1)
 
 
 <div align="right">
@@ -192,7 +201,7 @@ Zadanie wspomina o przestrzeni nazw określonej jako `zad4` lecz człowiek to ni
 
 </div>
 
-![image](https://github.com/Zeusek/PFSwChO/assets/33155636/5c291c4d-f5ec-412e-b284-c6e8e8023b53)
+![4](https://github.com/Zeusek/PFSwChO/assets/33155636/5c291c4d-f5ec-412e-b284-c6e8e8023b53)
 
 </div>
 
@@ -202,44 +211,207 @@ Zadanie wspomina o przestrzeni nazw określonej jako `zad4` lecz człowiek to ni
 
 Aby wykorzystać HorizontalPodAutoscaler (`HPA`) musimy uruchomić serwer metryk.
 
-Polecenie:
+##### Polecenie:
 ```bash
 minikube addons enable metrics-server
 minikube addons list | grep -i metrics-server
 ```
 
+##### Wymagania:
+- [x] Średnie zużycie CPU: `50%`
+- [x] Maksymalna ilość podów do skalowania: `7`
+- [x] Minimalna ilość podów do skalowania: `1`
+
+
 ```bash
-kubectl autoscale deployment php-apache -n lab5 --cpu-percent=50 --max=5 --min=1 --dry-run=client -o yaml > php-apache_autoscale.yaml
+kubectl autoscale deployment php-apache --namespace=lab5 --cpu-percent=50 --max=7 --min=1 --dry-run=client -o yaml > php-apache_autoscale.yaml
 ```
 
-Zrzut ekranowy:
+##### Zrzut ekranowy:
 
 <div align="center">
-
-Uruchomienie serwera metryk
-![image](https://github.com/Zeusek/PFSwChO/assets/33155636/04082e2d-bab2-4eb8-973b-91b549d32a91)
-
-
-![5](https://github.com/Zeusek/PFSwChO/assets/33155636/cfeb350f-6f27-4e1d-a548-77bc2a2937f6)
+<div align="right">
+  
+###### Uruchomienie serwera metryk
 
 </div>
 
-### Krok 6: Sprawdzenie obciążenia quoty
+![5](https://github.com/Zeusek/PFSwChO/assets/33155636/04082e2d-bab2-4eb8-973b-91b549d32a91)
 
-Polecenie:
+<div align="right">
+  
+###### Wygenerowanie pliku `php-apache_autoscale.yaml` z wymaganiami
+
+</div>
+
+![6](https://github.com/Zeusek/PFSwChO/assets/33155636/f03d4101-bf0f-49e1-96e3-cb0db91335d6)
+
+
+</div>
+
+> [!IMPORTANT]
+> #### Uzasadnienie
+> Wstępnie ustalona `maksymalna ilość replik` została określona na `7`*, natomiast po wykonaniu testu obciążającego serwis `php-apache` zmodyfikowanym skryptem umieszczonym w laboratorium 5 tj. 
+> ```bash
+> while sleep 0.001; do curl http://localhost:8080/; done
+> ```
+> hipotezy są dwie:
+>  1. Zmodyfikowany skrypt funkcjonuje poprawnie i wystarczająca maksymalna ilość replik jest satysfakcjonująca w ilości `5`* (zrzut ekranowy przedstawia `42% / 50%` repliki  4).
+>  2. Zmodyfikowany skrypt nie jest odzwierciedleniem faktycznego skryptu z laboratorium pod względem możliwego obciążenia i efekt pierwotnego skryptu jest widoczny w `laboratorium 5`, tj. obciążenie przy ilości `5` replik widnieje na poziomie `64% / 50%`. Sugeruje to, że optymalna ilość replik musi zostać określona w ilości `7`*.
+> 
+> #### :trollface: Wzór **
+> Dla hipotezy (wystarczającej) 1 :
+> 
+> $$ maxReplicas = \lceil{ cpuResources \over cpuDeploymentLimits } * targetCpuUtilizationPercentage\rceil $$
+> 
+> Przykład:
+> 
+> $$ maxReplicas =  \lceil{ 1800m \over 250m } * 0.5\rceil = \lceil { 7.2 } * 0.5\rceil  = \lceil{ 3.6 }\rceil = 4 $$
+> 
+> ---
+> Dla hipotezy (bezpiecznej) 2:
+> 
+> $$ maxReplicas = \lfloor{ cpuResources \over cpuDeploymentLimits }\rfloor $$
+>
+> Przykład:
+>
+> $$ maxReplicas = \lfloor{ 1800m \over 250m }\rfloor = \lfloor{ 7.2 }\rfloor = 7 $$
+>
+> 
+> \* - Przy bezpiecznym założeniu +1 ilości repliki.
+> \** - Najlepszym sposobem by określić maksymalną ilość replik jest sprawdzenie przepływu zapytań na serwer.
+
+### Krok 5: Skrypt tworzący obiekty z `.yaml`
+
+##### Skrypt `install.sh`
 ```bash
-kubectl get quota -n lab4
-```
+#!/bin/bash
+echo -e "\n\t ☁️ Instalacja zainicjowana. ☁️\n"
 
-Zrzut ekranowy:
+date
+
+echo -e "\n\t 🔧 Tworzenie przestrzeni nazw\n"
+minikube kubectl -- create ns lab5
+
+sleep 2
+
+echo -e "\n\t 🔧 Aplikowanie plików .yaml\n"
+minikube kubectl -- apply -f lab5quota.yaml
+
+sleep 2
+
+minikube kubectl -- apply -f worker_resoursed.yaml
+
+sleep 2
+
+echo -e "\n\t 🔧 Uruchomienie serwera metryk\n"
+minikube addons enable metrics-server
+minikube addons list | grep -i metrics-server
+
+sleep 2
+
+echo -e "\n\t 🔧 HPA time!\n"
+minikube kubectl -- create -f php-apache_autoscale.yaml
+
+minikube kubectl -- apply -f php-apache.yaml
+
+echo -e "\n\t ☁️ Instalacja zakończona. ☁️\n\n"
+
+minikube kubectl -- get quota -n lab5
+minikube kubectl -- describe hpa php-apache -n lab5
+
+echo -e "\n\n Chwilę należy odczekać po uruchomieniu."
+```
+##### Zrzuty ekranowe:
 
 <div align="center">
+<div align="right">
 
-![6](https://github.com/Zeusek/PFSwChO/assets/33155636/02b8b7f1-632d-4e5e-8fff-6068fb4746af)
+###### Wywołanie skryptu automatyzującego
+  
+</div>
+
+![7](https://github.com/Zeusek/PFSwChO/assets/33155636/b933dc1b-f84e-414f-a50c-66d8c6d5631a)
+
+</div>
+
+
+### Krok 6: Test obciążający
+
+> [!WARNING]
+> Polecenie to nie zostało wykorzystane w trakcie testu obciążenia.
+> ```bash
+> kubectl run -i --tty load-generator --rm --image=busybox:1.28 --restart=Never -- /bin/sh -c "while sleep 0.01; do wget -q -O- http://php-apache; done"
+> ```
+
+> [!NOTE]
+> Zbiór poleceń, które zostały zastosowane to:
+> 
+> Przekazanie portu na `8080`
+> ```bash
+> kubectl port-forward deploy/php-apache -n lab5 8080:80
+> ```
+> 
+> Wysłanie zapytania pobierającego zawartość strony
+> ```bash
+> while sleep 0.001; do curl http://localhost:8080/; done
+> ```
+>
+> Sprawdzenie szczegółów HPA dla `php-apache`
+> ```bash
+> kubectl describe hpa php-apache -n lab5
+> ```
+
+##### Zrzut ekranowy:
+
+<div align="center">
+<div align="right">
+ 
+</div>
+
+
+<div align="right">
+
+###### Przekierowanie portu na `8080`
+
+</div>
+
+  ![8](https://github.com/Zeusek/PFSwChO/assets/33155636/afa7196c-6351-40ad-bb29-0fd0720cc004)
+
+<div align="right">
+
+###### Wykonanie testu obciążajcego
+
+</div>
+
+![9](https://github.com/Zeusek/PFSwChO/assets/33155636/9975964e-8298-4c76-9dcc-3b180b3315b8)
+
+![10](https://github.com/Zeusek/PFSwChO/assets/33155636/0c34277d-114e-4978-a363-678cbba00b73)
+
+<div align="right">
+
+###### Wykonanie polecenia `describe` w celu sprawdzenia szczegółów HPA w trakcie działania skryptu obciążającego
+
+</div>
+
+![11](https://github.com/Zeusek/PFSwChO/assets/33155636/62a0fc8b-c90b-428b-8413-ee72f51bbe21)
+
+
+<div align="right">
+
+###### Wykonanie polecenia `describe` w celu sprawdzenia szczegółów HPA po wyłączeniu skryptu obciążającego
+
+</div>
+
+![12](https://github.com/Zeusek/PFSwChO/assets/33155636/e005e6a2-dd0b-42ef-889a-b794736f2a5c)
+
+
+
 
 </div>
 
 ---
+
 <div align="right"
 
   ☁️ ☁️ ☁️
