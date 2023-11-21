@@ -180,9 +180,10 @@ metadata: {}
 ```
 
 ❄️ Niestety, ale ustawienie zasobów za pomocą `kubectl set resources...` nie było możliwe, ponieważ polecenie ustawiało zasoby jedynie dla typu `Deployment`, a usuwało linie związane z typem `Service`. 
+
 Zadanie wspomina o przestrzeni nazw określonej jako `zad4` lecz człowiek to nie robot, pomylić się może. Zostało domyślnie przyjęte iż chodzi o `zad5` (w tym przypadku, student również to nie robot i został przyjęty zapis `lab` zamiast `zad`).
 
-##### Zrzut ekranowy:
+##### Zrzuty ekranowe:
 
 <div align="center">
 
@@ -227,7 +228,7 @@ minikube addons list | grep -i metrics-server
 kubectl autoscale deployment php-apache --namespace=lab5 --cpu-percent=50 --max=7 --min=1 --dry-run=client -o yaml > php-apache_autoscale.yaml
 ```
 
-##### Zrzut ekranowy:
+##### Zrzuty ekranowe:
 
 <div align="center">
 <div align="right">
@@ -284,9 +285,19 @@ kubectl autoscale deployment php-apache --namespace=lab5 --cpu-percent=50 --max=
 
 ### Krok 5: Skrypt tworzący obiekty z `.yaml`
 
-##### Skrypt `install.sh`
+W celu zautomatyzowania poleceń na plikach `.yaml`, został stworzony skrypt bashowy. Aby móc za pomocą jednego polecenia załadować wszystkie pliki należy uprzednio włączyć minikube:
 ```bash
-#!/bin/bash
+minikube start
+```
+Kolejnym krokiem będzie wywołanie skryptu:
+```bash
+./install.sh
+```
+
+> Skrypt operuje na przestrzeni nazw `lab5`
+
+##### Skrypt `install.sh`
+```bash#!/bin/bash
 echo -e "\n\t ☁️ Instalacja zainicjowana. ☁️\n"
 
 date
@@ -305,16 +316,26 @@ minikube kubectl -- apply -f worker_resoursed.yaml
 
 sleep 2
 
-echo -e "\n\t 🔧 Uruchomienie serwera metryk\n"
-minikube addons enable metrics-server
-minikube addons list | grep -i metrics-server
+echo -e "\n\t 🔧 Sprawdzenie serwera metryk\n"
+if [[ $(minikube addons list | grep -i metrics-server | cut -d "|" -f 4 | cut -d " " -f 2) = "enabled" ]]  
+then
+        echo -e "\t☁️ Serwer metryk jest już uruchomiony!\n"
+else
+        echo -e "\t😶‍🌫️ Serwer metryk jest wyłączony, już go uruchamiam.\n"
+        sleep 1
+        minikube addons enable metrics-server
+fi
 
 sleep 2
 
 echo -e "\n\t 🔧 HPA time!\n"
 minikube kubectl -- create -f php-apache_autoscale.yaml
 
+sleep 1
+
 minikube kubectl -- apply -f php-apache.yaml
+
+sleep 1
 
 echo -e "\n\t ☁️ Instalacja zakończona. ☁️\n\n"
 
@@ -323,7 +344,7 @@ minikube kubectl -- describe hpa php-apache -n lab5
 
 echo -e "\n\n Chwilę należy odczekać po uruchomieniu."
 ```
-##### Zrzuty ekranowe:
+##### Zrzut ekranowy:
 
 <div align="center">
 <div align="right">
@@ -363,7 +384,7 @@ echo -e "\n\n Chwilę należy odczekać po uruchomieniu."
 > kubectl describe hpa php-apache -n lab5
 > ```
 
-##### Zrzut ekranowy:
+##### Zrzuty ekranowe:
 
 <div align="center">
 <div align="right">
@@ -385,29 +406,32 @@ echo -e "\n\n Chwilę należy odczekać po uruchomieniu."
 
 </div>
 
-![9](https://github.com/Zeusek/PFSwChO/assets/33155636/9975964e-8298-4c76-9dcc-3b180b3315b8)
-
-![10](https://github.com/Zeusek/PFSwChO/assets/33155636/0c34277d-114e-4978-a363-678cbba00b73)
+![9](https://github.com/Zeusek/PFSwChO/assets/33155636/6574cef6-4a2d-4e63-ae2c-fc70cedece42)
 
 <div align="right">
 
-###### Wykonanie polecenia `describe` w celu sprawdzenia szczegółów HPA w trakcie działania skryptu obciążającego
+###### Wykonanie polecenia `describe` w celu sprawdzenia szczegółów HPA w ``przed` działaniem skryptu obciążającego
 
 </div>
 
-![11](https://github.com/Zeusek/PFSwChO/assets/33155636/62a0fc8b-c90b-428b-8413-ee72f51bbe21)
+![11](https://github.com/Zeusek/PFSwChO/assets/33155636/110e0154-5bcc-4cc0-89c4-a31f276a2c67)
 
 
 <div align="right">
 
-###### Wykonanie polecenia `describe` w celu sprawdzenia szczegółów HPA po wyłączeniu skryptu obciążającego
+###### Wykonanie polecenia `describe` w celu sprawdzenia szczegółów HPA ``w trakcie`` działania skryptu obciążającego
 
 </div>
 
-![12](https://github.com/Zeusek/PFSwChO/assets/33155636/e005e6a2-dd0b-42ef-889a-b794736f2a5c)
+![12](https://github.com/Zeusek/PFSwChO/assets/33155636/416ea96b-ff63-4c7b-b6c1-40a1c7d07544)
 
+<div align="right">
 
+###### Wykonanie polecenia `describe` w celu sprawdzenia szczegółów HPA ``po`` wyłączeniu skryptu obciążającego
 
+</div>
+
+![13](https://github.com/Zeusek/PFSwChO/assets/33155636/a9bf15cf-d1e4-4a90-ae28-5738c56809de)
 
 </div>
 
