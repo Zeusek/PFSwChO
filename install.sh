@@ -28,16 +28,26 @@ minikube kubectl -- apply -f worker_resoursed.yaml
 
 sleep 2
 
-echo -e "\n\t 🔧 Uruchomienie serwera metryk\n"
-minikube addons enable metrics-server
-minikube addons list | grep -i metrics-server
+echo -e "\n\t 🔧 Sprawdzenie serwera metryk\n"
+if [[ $(minikube addons list | grep -i metrics-server | cut -d "|" -f 4 | cut -d " " -f 2) = "enabled" ]]  
+then
+        echo -e "\t☁️ Serwer metryk jest już uruchomiony!\n"
+else
+        echo -e "\t😶‍🌫️ Serwer metryk jest wyłączony, już go uruchamiam.\n"
+        sleep 1
+        minikube addons enable metrics-server
+fi
 
 sleep 2
 
 echo -e "\n\t 🔧 HPA time!\n"
 minikube kubectl -- create -f php-apache_autoscale.yaml
 
+sleep 1
+
 minikube kubectl -- apply -f php-apache.yaml
+
+sleep 1
 
 echo -e "\n\t ☁️ Instalacja zakończona. ☁️\n\n"
 
