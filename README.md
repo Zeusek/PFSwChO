@@ -251,8 +251,8 @@ kubectl autoscale deployment php-apache --namespace=lab5 --cpu-percent=50 --max=
 </div>
 
 > [!IMPORTANT]
-> #### Uzasadnienie
-> Wstępnie ustalona `maksymalna ilość replik` została określona na `7`*, natomiast po wykonaniu testu obciążającego serwis `php-apache` zmodyfikowanym skryptem umieszczonym w laboratorium 5 tj. 
+> #### Uzasadnienie      
+> Wstępnie ustalona `maksymalna ilość replik` została określona na `7`, natomiast po wykonaniu testu obciążającego serwis `php-apache` zmodyfikowanym skryptem umieszczonym w laboratorium 5 tj. 
 > ```bash
 > while sleep 0.001; do curl http://localhost:8080/; done
 > ```
@@ -260,7 +260,7 @@ kubectl autoscale deployment php-apache --namespace=lab5 --cpu-percent=50 --max=
 >  1. Zmodyfikowany skrypt funkcjonuje poprawnie i wystarczająca maksymalna ilość replik jest satysfakcjonująca w ilości `5`* (zrzut ekranowy przedstawia `42% / 50%` repliki  4).
 >  2. Zmodyfikowany skrypt nie jest odzwierciedleniem faktycznego skryptu z laboratorium pod względem możliwego obciążenia i efekt pierwotnego skryptu jest widoczny w `laboratorium 5`, tj. obciążenie przy ilości `5` replik widnieje na poziomie `64% / 50%`. Sugeruje to, że optymalna ilość replik musi zostać określona w ilości `7`*.
 > 
-> #### :trollface: Wzór **
+> #### ⚖️ Wzór 
 > Dla hipotezy (wystarczającej) 1 :
 > 
 > $$ maxReplicas = \lceil{ cpuResources \over cpuDeploymentLimits } * targetCpuUtilizationPercentage\rceil $$
@@ -278,6 +278,9 @@ kubectl autoscale deployment php-apache --namespace=lab5 --cpu-percent=50 --max=
 >
 > $$ maxReplicas = \lfloor{ 1800m \over 250m }\rfloor = \lfloor{ 7.2 }\rfloor = 7 $$
 >
+> **Podsumowanie**
+> 
+> Faktyczną maksymalną ilość replik można wyliczać z wymyślonych wzorów, jednakże najlepszą "namacalną" metodą aby dobrać odpowiednią ilość potrzebnych podów bez przekraczania limitu jest sprawdzenie możliwości obciążenia deploymentu skryptem lub też innym sztucznie wygenerowanym ruchem. W przypadku testów obciążenie było wystarczające na 5 replik, przy założeniu, że jedna została dodana w celach "bezpieczeństwa".
 > 
 > \* - Przy bezpiecznym założeniu +1 ilości repliki.
 > 
