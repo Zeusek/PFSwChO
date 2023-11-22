@@ -280,7 +280,7 @@ kubectl autoscale deployment php-apache --namespace=lab5 --cpu-percent=50 --max=
 >
 > **Podsumowanie**
 > 
-> Faktyczną maksymalną ilość replik można wyliczać z wymyślonych wzorów, jednakże najlepszą "namacalną" metodą aby dobrać odpowiednią ilość potrzebnych podów bez przekraczania limitu jest sprawdzenie możliwości obciążenia deploymentu skryptem lub też innym sztucznie wygenerowanym ruchem. W przypadku testów obciążenie było wystarczające na 5 replik, przy założeniu, że jedna została dodana w celach "bezpieczeństwa".
+> Faktyczną maksymalną ilość replik można wyliczać z wymyślonych wzorów, jednakże najlepszą "namacalną" metodą aby dobrać odpowiednią ilość potrzebnych replik bez przekraczania limitu jest sprawdzenie możliwości obciążenia deploymentu skryptem lub też innym sztucznie wygenerowanym ruchem. W przypadku testów obciążenie było wystarczające na 5 replik, przy założeniu, że jedna została dodana w celach "bezpieczeństwa".
 > 
 > \* - Przy bezpiecznym założeniu +1 ilości repliki.
 > 
